@@ -5,15 +5,15 @@
   <title>Kuis AI SKI Kelas XII</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Library WAJIB -->
+  <!-- Library -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.2.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 
-  <!-- STYLE -->
+  <!-- STYLE ELEGAN -->
   <style>
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: linear-gradient(135deg, #e3f2fd, #ffffff);
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(160deg, #eef3f8, #ffffff);
       margin: 0;
       display: flex;
       justify-content: center;
@@ -25,50 +25,75 @@
       width: 100%;
       max-width: 420px;
       margin: 20px;
-      padding: 20px;
-      border-radius: 14px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.08);
       text-align: center;
     }
 
     h2 {
-      color: #1565c0;
-      margin-bottom: 5px;
+      margin: 0;
+      color: #1e3a8a;
     }
 
     .subtitle {
       font-size: 14px;
       color: #555;
+      margin: 10px 0 20px;
+    }
+
+    .score-box {
+      background: #f1f5f9;
+      border-radius: 12px;
+      padding: 10px;
       margin-bottom: 15px;
+      font-weight: bold;
+      color: #0f172a;
     }
 
     button {
       width: 100%;
       padding: 14px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 16px;
-      background: #1565c0;
+      background: #1e40af;
       color: white;
       cursor: pointer;
     }
 
     button:hover {
-      background: #0d47a1;
+      background: #1e3a8a;
     }
 
     video {
       width: 100%;
-      border-radius: 12px;
+      border-radius: 14px;
       margin-top: 10px;
     }
 
     #hasil {
       margin-top: 15px;
+      padding: 12px;
+      border-radius: 12px;
       font-size: 18px;
       font-weight: bold;
-      color: #2e7d32;
+    }
+
+    .benar {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .salah {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .netral {
+      background: #f1f5f9;
+      color: #334155;
     }
 
     footer {
@@ -83,26 +108,33 @@
   <div class="container">
     <h2>Kuis AI SKI Kelas XII</h2>
     <div class="subtitle">
-      Arahkan kamera ke kartu jawaban / objek
+      Arahkan kamera ke kartu jawaban
+    </div>
+
+    <div class="score-box">
+      Skor: <span id="skor">0</span>
     </div>
 
     <button onclick="init()">🎥 Mulai Kamera</button>
 
     <div id="webcam-container"></div>
-    <div id="hasil">Hasil: -</div>
+
+    <div id="hasil" class="netral">Menunggu jawaban...</div>
 
     <footer>
-      Pembelajaran AI Informatika • Aman & Edukatif
+      AI Informatika • Pembelajaran Aman & Etis
     </footer>
   </div>
 
   <!-- SCRIPT AI -->
   <script>
-    // 🔴 GANTI LINK MODEL KAMU
+    // 🔴 GANTI LINK MODEL
     const URL = "https://teachablemachine.withgoogle.com/models/oG8yzZaWr/";
 
     let model;
     let video;
+    let skor = 0;
+    let sudahMenjawab = false;
 
     async function setupCamera() {
       video = document.createElement("video");
@@ -110,9 +142,7 @@
       video.autoplay = true;
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { exact: "environment" }
-        }
+        video: { facingMode: { exact: "environment" } }
       });
 
       video.srcObject = stream;
@@ -136,9 +166,28 @@
         prev.probability > curr.probability ? prev : curr
       );
 
-      document.getElementById("hasil").innerText =
-        hasilTerbesar.className + " : " +
-        Math.round(hasilTerbesar.probability * 100) + "%";
+      const hasilEl = document.getElementById("hasil");
+
+      if (hasilTerbesar.probability >= 0.8 && !sudahMenjawab) {
+        if (hasilTerbesar.className.toLowerCase() === "benar") {
+          skor += 10;
+          hasilEl.innerText = "✅ BENAR (+10)";
+          hasilEl.className = "benar";
+        } else {
+          hasilEl.innerText = "❌ SALAH";
+          hasilEl.className = "salah";
+        }
+
+        document.getElementById("skor").innerText = skor;
+        sudahMenjawab = true;
+
+        // reset otomatis setelah 2 detik
+        setTimeout(() => {
+          sudahMenjawab = false;
+          hasilEl.innerText = "Siap soal berikutnya...";
+          hasilEl.className = "netral";
+        }, 2000);
+      }
 
       window.requestAnimationFrame(loop);
     }
