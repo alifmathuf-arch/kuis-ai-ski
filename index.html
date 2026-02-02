@@ -60,4 +60,206 @@ video {
   margin-top:10px;
 }
 
-.inf
+.info {
+  margin-top:12px;
+  font-size:15px;
+}
+
+#teksSoal {
+  margin: 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+#hasil {
+  margin-top: 10px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+footer {
+  margin-top: 18px;
+  font-size: 12px;
+  color: #777;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>Kuis AI SKI XII</h2>
+<div class="subtitle">Jawab dengan kartu A / B / C / D</div>
+
+<!-- LOGIN -->
+<div id="login">
+  <input id="nama" placeholder="Nama Siswa">
+  <button onclick="mulai()">▶ Mulai Kuis</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" style="display:none">
+  <div class="info">
+    👤 <span id="namaSiswa"></span><br>
+    📘 Soal <span id="nomor">1</span> / 10<br>
+    ⭐ Skor: <span id="skor">0</span>
+  </div>
+
+  <div id="teksSoal">Memuat soal...</div>
+  <div id="kamera"></div>
+  <div id="hasil">Arahkan kartu jawaban...</div>
+</div>
+
+<!-- REKAP -->
+<div id="rekap" style="display:none">
+  <h3>📊 Rekap Hasil</h3>
+  <p>Nama: <b id="rekapNama"></b></p>
+  <p>Skor Akhir: <b id="rekapSkor"></b> / 10</p>
+</div>
+
+<footer>
+  Informatika • AI Edukasi • Aman
+</footer>
+
+</div>
+
+<script>
+/* =============================
+   GANTI LINK MODEL DI SINI
+============================= */
+const URL = "https://teachablemachine.withgoogle.com/models/oG8yzZaWr/";
+
+/* =============================
+   DATA SOAL (10)
+============================= */
+const daftarSoal = {
+  1: "Di manakah Nabi Muhammad SAW dilahirkan?",
+  2: "Tahun kelahiran Nabi Muhammad SAW dikenal sebagai tahun?",
+  3: "Nama ayah Nabi Muhammad SAW adalah?",
+  4: "Nama ibu Nabi Muhammad SAW adalah?",
+  5: "Nabi Muhammad diasuh oleh kakeknya bernama?",
+  6: "Suku Nabi Muhammad SAW berasal dari?",
+  7: "Peristiwa pasukan gajah terjadi sebelum hijrah berapa tahun?",
+  8: "Nama paman Nabi yang melindungi beliau adalah?",
+  9: "Nabi Muhammad menerima wahyu pertama di?",
+  10:"Malaikat penyampai wahyu kepada Nabi Muhammad adalah?"
+};
+
+/* =============================
+   KUNCI JAWABAN
+   (HARUS SAMA DENGAN
+    NAMA CLASS DI TM)
+============================= */
+const kunciJawaban = {
+  1: "A",
+  2: "B",
+  3: "C",
+  4: "D",
+  5: "A",
+  6: "B",
+  7: "C",
+  8: "D",
+  9: "A",
+  10:"B"
+};
+
+let model, video;
+let soal = 1;
+let skor = 0;
+let namaSiswa = "";
+let terkunci = false;
+
+/* =============================
+   MULAI KUIS
+============================= */
+async function mulai(){
+  namaSiswa = document.getElementById("nama").value.trim();
+  if(!namaSiswa){
+    alert("Nama wajib diisi");
+    return;
+  }
+
+  document.getElementById("login").style.display="none";
+  document.getElementById("quiz").style.display="block";
+  document.getElementById("namaSiswa").innerText = namaSiswa;
+  document.getElementById("teksSoal").innerText = daftarSoal[soal];
+
+  model = await tmImage.load(URL+"model.json", URL+"metadata.json");
+  await setupCamera();
+  loop();
+}
+
+/* =============================
+   KAMERA BELAKANG
+============================= */
+async function setupCamera(){
+  video = document.createElement("video");
+  video.setAttribute("playsinline","");
+  video.autoplay = true;
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video:{ facingMode:"environment" }
+  });
+
+  video.srcObject = stream;
+  await video.play();
+
+  document.getElementById("kamera").appendChild(video);
+}
+
+/* =============================
+   LOOP PREDIKSI
+============================= */
+async function loop(){
+  if(!terkunci){
+    const pred = await model.predict(video);
+    const terbaik = pred.reduce((a,b)=>a.probability>b.probability?a:b);
+
+    if(terbaik.probability > 0.90){
+      cekJawaban(terbaik.className);
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+/* =============================
+   CEK JAWABAN
+============================= */
+function cekJawaban(jawaban){
+  terkunci = true;
+
+  if(jawaban === kunciJawaban[soal]){
+    skor++;
+    document.getElementById("hasil").innerText="✅ BENAR";
+  } else {
+    document.getElementById("hasil").innerText="❌ SALAH";
+  }
+
+  document.getElementById("skor").innerText = skor;
+
+  setTimeout(()=>{
+    soal++;
+    terkunci = false;
+
+    if(soal > 10){
+      selesai();
+    } else {
+      document.getElementById("nomor").innerText = soal;
+      document.getElementById("teksSoal").innerText = daftarSoal[soal];
+      document.getElementById("hasil").innerText="Arahkan kartu jawaban...";
+    }
+  }, 1500);
+}
+
+/* =============================
+   SELESAI
+============================= */
+function selesai(){
+  document.getElementById("quiz").style.display="none";
+  document.getElementById("rekap").style.display="block";
+  document.getElementById("rekapNama").innerText = namaSiswa;
+  document.getElementById("rekapSkor").innerText = skor;
+}
+</script>
+</body>
+</html>
