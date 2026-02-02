@@ -5,82 +5,58 @@
 <title>Kuis AI SKI Kelas XII</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- LIBRARY WAJIB -->
+<!-- LIBRARY -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.2.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 
 <style>
-body {
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: linear-gradient(135deg,#e3f2fd,#fff);
-  margin: 0;
-  display: flex;
-  justify-content: center;
+body{
+  font-family:Segoe UI,Arial,sans-serif;
+  background:linear-gradient(135deg,#e3f2fd,#fff);
+  margin:0;
+  display:flex;
+  justify-content:center;
 }
-
-.container {
-  width: 100%;
-  max-width: 430px;
-  background: #fff;
-  margin: 20px;
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(0,0,0,.12);
-  text-align: center;
-}
-
-h2 { color:#0d47a1; margin-bottom:4px; }
-.subtitle { font-size:14px; color:#555; }
-
-input {
-  width: 100%;
-  padding: 12px;
-  margin: 12px 0;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  border: none;
-  border-radius: 12px;
-  background: #1565c0;
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
-}
-button:hover { background:#0d47a1; }
-
-video {
+.container{
   width:100%;
-  border-radius:14px;
+  max-width:430px;
+  background:#fff;
+  margin:20px;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+  text-align:center;
+}
+h2{color:#0d47a1;margin-bottom:4px;}
+.subtitle{font-size:14px;color:#555;}
+input{
+  width:100%;padding:12px;margin:12px 0;
+  border-radius:10px;border:1px solid #ccc;font-size:16px;
+}
+button{
+  width:100%;padding:14px;margin-top:10px;
+  border:none;border-radius:12px;
+  background:#1565c0;color:#fff;font-size:16px;
+}
+button:hover{background:#0d47a1;}
+video{
+  width:100%;border-radius:14px;margin-top:10px;
+}
+.info{margin-top:12px;font-size:15px;}
+#teksSoal{
+  margin:15px 0;
+  font-size:16px;
+  font-weight:600;
+}
+#hasil{
   margin-top:10px;
+  font-size:18px;
+  font-weight:bold;
 }
-
-.info {
-  margin-top:12px;
-  font-size:15px;
-}
-
-#teksSoal {
-  margin: 15px 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-#hasil {
-  margin-top: 10px;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-footer {
-  margin-top: 18px;
-  font-size: 12px;
-  color: #777;
+footer{
+  margin-top:18px;
+  font-size:12px;
+  color:#777;
 }
 </style>
 </head>
@@ -107,7 +83,7 @@ footer {
 
   <div id="teksSoal">Memuat soal...</div>
   <div id="kamera"></div>
-  <div id="hasil">Arahkan kartu jawaban...</div>
+  <div id="hasil">Arahkan kartu jawaban…</div>
 </div>
 
 <!-- REKAP -->
@@ -117,50 +93,37 @@ footer {
   <p>Skor Akhir: <b id="rekapSkor"></b> / 10</p>
 </div>
 
-<footer>
-  Informatika • AI Edukasi • Aman
-</footer>
-
+<footer>Informatika • AI Edukasi • Aman</footer>
 </div>
 
 <script>
 /* =============================
-   GANTI LINK MODEL DI SINI
+   LINK MODEL TM
 ============================= */
 const URL = "https://teachablemachine.withgoogle.com/models/oG8yzZaWr/";
 
 /* =============================
-   DATA SOAL (10)
+   SOAL
 ============================= */
 const daftarSoal = {
-  1: "Di manakah Nabi Muhammad SAW dilahirkan?",
-  2: "Tahun kelahiran Nabi Muhammad SAW dikenal sebagai tahun?",
-  3: "Nama ayah Nabi Muhammad SAW adalah?",
-  4: "Nama ibu Nabi Muhammad SAW adalah?",
-  5: "Nabi Muhammad diasuh oleh kakeknya bernama?",
-  6: "Suku Nabi Muhammad SAW berasal dari?",
-  7: "Peristiwa pasukan gajah terjadi sebelum hijrah berapa tahun?",
-  8: "Nama paman Nabi yang melindungi beliau adalah?",
-  9: "Nabi Muhammad menerima wahyu pertama di?",
+  1:"Di manakah Nabi Muhammad SAW dilahirkan?",
+  2:"Tahun kelahiran Nabi Muhammad SAW dikenal sebagai tahun?",
+  3:"Nama ayah Nabi Muhammad SAW adalah?",
+  4:"Nama ibu Nabi Muhammad SAW adalah?",
+  5:"Nabi Muhammad diasuh oleh kakeknya bernama?",
+  6:"Suku Nabi Muhammad SAW berasal dari?",
+  7:"Peristiwa pasukan gajah terjadi sebelum hijrah berapa tahun?",
+  8:"Nama paman Nabi yang melindungi beliau adalah?",
+  9:"Nabi Muhammad menerima wahyu pertama di?",
   10:"Malaikat penyampai wahyu kepada Nabi Muhammad adalah?"
 };
 
 /* =============================
    KUNCI JAWABAN
-   (HARUS SAMA DENGAN
-    NAMA CLASS DI TM)
 ============================= */
 const kunciJawaban = {
-  1: "A",
-  2: "B",
-  3: "C",
-  4: "D",
-  5: "A",
-  6: "B",
-  7: "C",
-  8: "D",
-  9: "A",
-  10:"B"
+  1:"A",2:"B",3:"C",4:"D",5:"A",
+  6:"B",7:"C",8:"D",9:"A",10:"B"
 };
 
 let model, video;
@@ -168,23 +131,21 @@ let soal = 1;
 let skor = 0;
 let namaSiswa = "";
 let terkunci = false;
+let waktuTerakhirJawab = 0;
 
 /* =============================
-   MULAI KUIS
+   MULAI
 ============================= */
 async function mulai(){
   namaSiswa = document.getElementById("nama").value.trim();
-  if(!namaSiswa){
-    alert("Nama wajib diisi");
-    return;
-  }
+  if(!namaSiswa){ alert("Nama wajib diisi"); return; }
 
   document.getElementById("login").style.display="none";
   document.getElementById("quiz").style.display="block";
   document.getElementById("namaSiswa").innerText = namaSiswa;
   document.getElementById("teksSoal").innerText = daftarSoal[soal];
 
-  model = await tmImage.load(URL+"model.json", URL+"metadata.json");
+  model = await tmImage.load(URL+"model.json",URL+"metadata.json");
   await setupCamera();
   loop();
 }
@@ -203,19 +164,18 @@ async function setupCamera(){
 
   video.srcObject = stream;
   await video.play();
-
   document.getElementById("kamera").appendChild(video);
 }
 
 /* =============================
-   LOOP PREDIKSI
+   LOOP AI
 ============================= */
 async function loop(){
   if(!terkunci){
     const pred = await model.predict(video);
     const terbaik = pred.reduce((a,b)=>a.probability>b.probability?a:b);
 
-    if(terbaik.probability > 0.90){
+    if(terbaik.probability > 0.92){
       cekJawaban(terbaik.className);
     }
   }
@@ -223,15 +183,19 @@ async function loop(){
 }
 
 /* =============================
-   CEK JAWABAN
+   CEK JAWABAN (ANTI LOMPAT)
 ============================= */
 function cekJawaban(jawaban){
+  const sekarang = Date.now();
+  if(sekarang - waktuTerakhirJawab < 3000) return;
+
+  waktuTerakhirJawab = sekarang;
   terkunci = true;
 
   if(jawaban === kunciJawaban[soal]){
     skor++;
     document.getElementById("hasil").innerText="✅ BENAR";
-  } else {
+  }else{
     document.getElementById("hasil").innerText="❌ SALAH";
   }
 
@@ -243,12 +207,12 @@ function cekJawaban(jawaban){
 
     if(soal > 10){
       selesai();
-    } else {
+    }else{
       document.getElementById("nomor").innerText = soal;
       document.getElementById("teksSoal").innerText = daftarSoal[soal];
-      document.getElementById("hasil").innerText="Arahkan kartu jawaban...";
+      document.getElementById("hasil").innerText="Arahkan kartu jawaban…";
     }
-  }, 1500);
+  },2000);
 }
 
 /* =============================
