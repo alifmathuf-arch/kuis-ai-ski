@@ -58,7 +58,7 @@
       background: #0d47a1;
     }
 
-    #webcam-container canvas {
+    video {
       width: 100%;
       border-radius: 12px;
       margin-top: 10px;
@@ -87,7 +87,6 @@
     </div>
 
     <button onclick="init()">🎥 Mulai Kamera</button>
-    <button onclick="switchCamera()">🔄 Ganti Kamera</button>
 
     <div id="webcam-container"></div>
     <div id="hasil">Hasil: -</div>
@@ -99,36 +98,39 @@
 
   <!-- SCRIPT AI -->
   <script>
-    // 🔴 GANTI LINK MODEL DI SINI
+    // 🔴 GANTI LINK MODEL KAMU
     const URL = "https://teachablemachine.withgoogle.com/models/oG8yzZaWr/";
 
-    let model, webcam;
-    let useFrontCamera = false; // FALSE = kamera belakang
+    let model;
+    let video;
+
+    async function setupCamera() {
+      video = document.createElement("video");
+      video.setAttribute("playsinline", "");
+      video.autoplay = true;
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { exact: "environment" }
+        }
+      });
+
+      video.srcObject = stream;
+      await video.play();
+
+      const container = document.getElementById("webcam-container");
+      container.innerHTML = "";
+      container.appendChild(video);
+    }
 
     async function init() {
       model = await tmImage.load(URL + "model.json", URL + "metadata.json");
-
-      webcam = new tmImage.Webcam(300, 300, useFrontCamera);
-      await webcam.setup();
-      await webcam.play();
-
-      document.getElementById("webcam-container").innerHTML = "";
-      document.getElementById("webcam-container").appendChild(webcam.canvas);
-
+      await setupCamera();
       window.requestAnimationFrame(loop);
     }
 
-    async function switchCamera() {
-      useFrontCamera = !useFrontCamera;
-      if (webcam) {
-        await webcam.stop();
-      }
-      await init();
-    }
-
     async function loop() {
-      webcam.update();
-      const prediction = await model.predict(webcam.canvas);
+      const prediction = await model.predict(video);
 
       let hasilTerbesar = prediction.reduce((prev, curr) =>
         prev.probability > curr.probability ? prev : curr
