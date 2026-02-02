@@ -101,39 +101,32 @@
 
 
 <script>
-  let useFrontCamera = false; // false = kamera belakang
-
+ 
   const URL = "https://teachablemachine.withgoogle.com/models/oG8yzZaWr/";
 
-  let model, webcam;
+let useFrontCamera = false;
 
-  async function init() {
-    model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+async function init() {
+  model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+  webcam = new tmImage.Webcam(200, 200, useFrontCamera);
+  await webcam.setup();
+  await webcam.play();
+  document.getElementById("webcam-container").appendChild(webcam.canvas);
+  window.requestAnimationFrame(loop);
+}
 
-    webcam = new tmImage.Webcam(200, 200, useFrontCamera);
-    await webcam.setup();
-    await webcam.play();
-  async function switchCamera() {
+async function switchCamera() {
   useFrontCamera = !useFrontCamera;
   await webcam.stop();
   await init();
 }
 
-    document.getElementById("webcam-container").appendChild(webcam.canvas);
-    window.requestAnimationFrame(loop);
-  }
+async function loop() {
+  ...
+}
 
-  async function loop() {
-    webcam.update();
-    const prediction = await model.predict(webcam.canvas);
-
-    document.getElementById("hasil").innerText =
-      prediction[0].className + " : " +
-      Math.round(prediction[0].probability * 100) + "%";
-
-    window.requestAnimationFrame(loop);
-  }
 </script>
 </body>
 </html>
+
 
