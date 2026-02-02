@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kuis AI SKI</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+</head>
+
+<body>
+  <h2>Kuis AI SKI</h2>
+  <button onclick="init()">Mulai Kamera</button>
+  <div id="webcam-container"></div>
+  <p id="hasil">Hasil: -</p>
+
+<script>
+  const URL = "https://teachablemachine.withgoogle.com/models/oG8yzZaWr/";
+
+  let model, webcam;
+
+  async function init() {
+    model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+
+    webcam = new tmImage.Webcam(200, 200, true);
+    await webcam.setup();
+    await webcam.play();
+
+    document.getElementById("webcam-container").appendChild(webcam.canvas);
+    window.requestAnimationFrame(loop);
+  }
+
+  async function loop() {
+    webcam.update();
+    const prediction = await model.predict(webcam.canvas);
+
+    document.getElementById("hasil").innerText =
+      prediction[0].className + " : " +
+      Math.round(prediction[0].probability * 100) + "%";
+
+    window.requestAnimationFrame(loop);
+  }
+</script>
+</body>
+</html>
